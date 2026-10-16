@@ -232,6 +232,8 @@ const VIEWS = [
   { he: 'חזית צפונית וגינה', pos: [3.5, 3.2, -12.5], target: [4.2, 2.6, 2] },
   { he: 'חזית דרומית', pos: [8.5, 3.5, 24], target: [5.8, 3.0, 10] },
   { he: 'הגג והקולטים', pos: [-4, 14, 18], target: [7.5, 6.2, 8] },
+  { he: 'תוכנית קומת קרקע', pos: [5.6, 27, 6.31], target: [5.6, 0, 6.3], floor: 'ground' },
+  { he: 'תוכנית קומה א׳', pos: [5.6, 29, 6.31], target: [5.6, 3.25, 6.3], floor: 'upper' },
 ];
 
 function buildMenus() {
@@ -256,7 +258,7 @@ function buildMenus() {
   for (const v of VIEWS) {
     const b = document.createElement('button');
     b.textContent = v.he;
-    b.onclick = () => { closeMenus(); flyTo(v.pos, v.target, 'all'); };
+    b.onclick = () => { closeMenus(); flyTo(v.pos, v.target, v.floor ?? 'all'); };
     vm.appendChild(b);
   }
   $('btn-rooms').onclick = (e) => { e.stopPropagation(); toggleMenu('menu-rooms'); };
@@ -490,6 +492,19 @@ addEventListener('resize', resize);
 // Time of day
 // ---------------------------------------------------------------------------
 const today = new Date();
+let day = today;
+const SEASONS = {
+  today: () => today,
+  summer: () => new Date(today.getFullYear(), 5, 21),
+  winter: () => new Date(today.getFullYear(), 11, 21),
+};
+document.querySelectorAll('#season-seg button').forEach((b) => {
+  b.onclick = () => {
+    day = SEASONS[b.dataset.season]();
+    document.querySelectorAll('#season-seg button').forEach((x) => x.classList.toggle('on', x === b));
+    updateTime();
+  };
+});
 let envPending = false;
 function updateTime() {
   const t = parseFloat($('time').value);
@@ -499,7 +514,7 @@ function updateTime() {
   envPending = true;
   requestAnimationFrame(() => {
     envPending = false;
-    env.update(today, parseFloat($('time').value));
+    env.update(day, parseFloat($('time').value));
     $('time-icon').textContent = env.alt > 0 ? '☀' : '☾';
     if (tvScreen) tvScreen.emissiveIntensity = 0.45 + env.night * 0.6;
   });

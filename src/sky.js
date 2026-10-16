@@ -54,6 +54,45 @@ function stars() {
   return new THREE.Points(g, m);
 }
 
+function cloudTexture(seed) {
+  const W = 256, H = 128;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  let s = seed;
+  const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < 26; i++) {
+    const x = W * (0.18 + rnd() * 0.64), y = H * (0.45 + (rnd() - 0.5) * 0.35);
+    const r = 18 + rnd() * 34;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(255,255,255,0.55)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function clouds() {
+  const g = new THREE.Group();
+  const mats = [];
+  for (let i = 0; i < 14; i++) {
+    const m = new THREE.SpriteMaterial({ map: cloudTexture(1000 + i * 77), transparent: true, depthWrite: false, fog: false, opacity: 0.8 });
+    mats.push(m);
+    const sp = new THREE.Sprite(m);
+    const a = (i / 14) * Math.PI * 2 + Math.sin(i * 3.1) * 0.3;
+    const r = 900 + (i % 4) * 220;
+    sp.position.set(Math.cos(a) * r, 260 + (i % 5) * 70, Math.sin(a) * r);
+    const sc = 420 + (i % 3) * 180;
+    sp.scale.set(sc, sc * 0.42, 1);
+    g.add(sp);
+  }
+  g.userData.mats = mats;
+  return g;
+}
+
 export class Environment {
   constructor(renderer, scene, { shadowSize = 4096 } = {}) {
     this.renderer = renderer;
@@ -93,6 +132,8 @@ export class Environment {
 
     this.stars = stars();
     scene.add(this.stars);
+    this.clouds = clouds();
+    scene.add(this.clouds);
 
     this.sun = new THREE.DirectionalLight(0xffffff, 3);
     this.sun.castShadow = true;
@@ -154,6 +195,8 @@ export class Environment {
     this.hemi.color.set(0xfff3e2).lerp(new THREE.Color(0x3a4a7a), this.night);
     this.hemi.groundColor.set(0xe2d6c4).lerp(new THREE.Color(0x15161a), this.night);
     this.stars.material.opacity = this.night * 0.9;
+    const cloudCol = new THREE.Color(0xffffff).lerp(new THREE.Color(0xffb07a), golden * 0.7).lerp(new THREE.Color(0x2a3248), this.night);
+    for (const m of this.clouds.userData.mats) { m.color.copy(cloudCol); m.opacity = 0.75 * (1 - this.night * 0.8); }
 
     const fogDay = new THREE.Color(0xc5d0d6).lerp(new THREE.Color(0xe0b08a), golden * 0.5);
     const fogNight = new THREE.Color(0x0d1424);

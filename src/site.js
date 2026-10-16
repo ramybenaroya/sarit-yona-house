@@ -190,8 +190,10 @@ function neighbourhood(M, heightAt) {
     else { const a = rnd() * Math.PI * 2, r = 85 + rnd() * 60; x = 6 + Math.cos(a) * r; z = 6 + Math.sin(a) * r; }
     spots.push([x, z]);
   }
-  for (const [x, z] of spots) {
+  for (const spot of spots) {
+    const [x, z] = spot;
     const w = 8 + rnd() * 4, d = 9 + rnd() * 4, h = rnd() > 0.4 ? 6.4 : 3.4;
+    spot.push(w, d, h);
     const y0 = heightAt(x - 6, z - 6) - 0.3;
     b.box(x - w / 2, y0, z - d / 2, x + w / 2, y0 + h + 0.3, z + d / 2, { ...ALL(M.stone), py: M.roof });
     // windows as dark insets
@@ -203,6 +205,20 @@ function neighbourhood(M, heightAt) {
     b.box(x - 1, y0 + h + 0.3, z - 1, x + 0.4, y0 + h + 1.2, z + 0.6, ALL(M.white));
   }
   b.build(g);
+  // a few red-tiled gable roofs for variety
+  const tile = new THREE.MeshStandardMaterial({ color: 0xa9533b, roughness: 0.8 });
+  spots.forEach(([x, z, w, d, h], i) => {
+    if (i % 3 !== 1) return;
+    const hh = 2.2;
+    const sh = new THREE.Shape();
+    sh.moveTo(-w / 2 - 0.4, 0); sh.lineTo(w / 2 + 0.4, 0); sh.lineTo(0, hh); sh.closePath();
+    const geo = new THREE.ExtrudeGeometry(sh, { depth: d + 0.6, bevelEnabled: false });
+    geo.translate(0, 0, -(d + 0.6) / 2);
+    const roof = mesh(geo, tile);
+    const y0 = heightAt(x - 6, z - 6) - 0.3;
+    roof.position.set(x, y0 + h + 0.3, z);
+    g.add(roof);
+  });
   for (const [x, z] of spots) {
     if (rnd() > 0.5) {
       const t = oliveTree(M, 0.9 + rnd() * 0.4, Math.floor(x * z));
