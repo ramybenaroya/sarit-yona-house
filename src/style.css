@@ -148,7 +148,7 @@ button {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
 .dock-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
-.time-row { display: flex; align-items: center; gap: 12px; padding: 2px 6px 10px; }
+.time-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 2px 6px 10px; }
 .time-icon { font-size: 18px; width: 22px; text-align: center; }
 .time-label { font-variant-numeric: tabular-nums; min-width: 48px; text-align: center; font-weight: 500; }
 #time { flex: 1; direction: ltr; accent-color: var(--accent); height: 22px; }
@@ -278,6 +278,8 @@ button {
   .seg button { padding: 7px 10px; font-size: 13px; }
   .menu-btn { padding: 8px 10px; font-size: 13px; }
   .dock { padding: 10px; }
-  #minimap { width: 130px; height: 130px; bottom: 190px; left: 10px; }
+  /* keep the minimap clear of the dock: tuck it under the top buttons */
+  #minimap { width: 120px; height: 120px; top: 74px; bottom: auto; left: 10px; }
+  #season-seg { order: 5; margin: 0 auto; }
   .room-card { top: 82px; right: 10px; }
 }

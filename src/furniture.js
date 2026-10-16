@@ -680,8 +680,8 @@ export function furnish(M, groups) {
   add(G, bx(5.75, 0.003, 4.85, 6.1, 0.012, 5.8, M.fabricNavy), 0, 0, 0);
   for (const [x, z] of [[4.8, 5.0], [5.6, 5.0], [4.8, 5.6], [5.6, 5.6]]) add(G, spot(M), x, 2.5, z);
   // gallery wall in the hall
-  add(G, painting(M, 0.9, 0.65, 3, ['#efe6d6', '#c4734a', '#7c8560', '#d9b26a', '#33415c']), 5.172, 1.55, 6.9, FACE.east);
-  add(G, painting(M, 0.6, 0.8, 9, ['#e9e4dc', '#3c4a63', '#a9c4c2', '#c0714f']), 5.172, 1.5, 7.75, FACE.east);
+  // the pantry's back wall runs z 5.97–7.637; keep the art within it
+  add(G, painting(M, 1.0, 0.7, 3, ['#efe6d6', '#c4734a', '#7c8560', '#d9b26a', '#33415c']), 5.172, 1.55, 6.8, FACE.east);
 
   // Guest WC
   add(G, toilet(M), 8.18, 0, 7.85, FACE.west);
@@ -706,7 +706,8 @@ export function furnish(M, groups) {
 
   // Corridor: linen cabinet + art
   add(G, wardrobe(M, 1.04, 2.2, 0.27, 2), 6.95, 0, 9.565, FACE.north);
-  add(G, painting(M, 0.8, 0.55, 33, ['#efe6d6', '#33415c', '#c4734a', '#e8c37d']), 6.0, 1.55, 8.486, FACE.south);
+  // corridor art on the master-bath wall (x 4.869–5.575), clear of the sliding-door opening
+  add(G, painting(M, 0.5, 0.7, 33, ['#efe6d6', '#33415c', '#c4734a', '#e8c37d']), 5.222, 1.5, 9.698, FACE.north);
   for (const x of [5.4, 6.4]) add(G, spot(M), x, LEVELS.groundCeiling, 9.1);
 
   // Master bathroom
