@@ -125,8 +125,7 @@ function shrub(M, r, color, seed, flowers = null) {
 // ---------------------------------------------------------------------------
 function terrain(M) {
   const R = 900;
-  const geo = new THREE.CircleGeometry(R, 160, 0, Math.PI * 2);
-  // densify: use a ring/polar layout via a custom geometry
+  // polar grid: dense rings near the house, sparse toward the horizon
   const radial = 70, segs = 160;
   const pos = [], col = [], idx = [];
   const c1 = new THREE.Color(0xb7ad7f), c2 = new THREE.Color(0x9c9563), c3 = new THREE.Color(0xcfc29a), c4 = new THREE.Color(0x7e8452);
@@ -163,7 +162,6 @@ function terrain(M) {
       idx.push(a, b, c, b, d, c);
     }
   }
-  geo.dispose();
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));

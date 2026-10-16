@@ -264,7 +264,7 @@ function addSillLintel(batch, o, level, top, classify, M) {
   if (sill > 0.001) {
     batch.classifiedBox(r, level === 0 ? LEVELS.outside : level, level + sill, classify, M.coping);
   }
-  batch.classifiedBox(r, level + head, top, classify, M.wallTop, o.meta?.extSide ? M.paint : M.paint);
+  batch.classifiedBox(r, level + head, top, classify, M.wallTop, M.paint);
 }
 
 function addFloors(batch, floor, level, M) {

@@ -161,7 +161,7 @@ function buildLabels() {
   }
   const outdoor = [
     { he: 'פטיו ופרגולה', p: [7.8, 0.3, 3.0] },
-    { he: 'גינה', p: [4.5, 0.2, -2.6] },
+    { he: 'גינה', p: [6.5, 0.3, -3.4] },
     { he: 'סאונה', p: [0.9, 2.3, -0.7] },
     { he: 'גג מרוצף', p: [2.6, 4.2, 4.0] },
     { he: 'חצר דרומית', p: [6.0, 0.3, 14.2] },
@@ -305,7 +305,6 @@ function setupControls() {
 
   walker = new Walker(camera, renderer.domElement, {
     onExit: () => setMode('orbit'),
-    onMove: () => {},
   });
 }
 
@@ -413,10 +412,9 @@ function drawMinimap() {
   if (mode !== 'walk') return;
   const W = mm.width;
   const s = W / MM.size;
-  const tx = (x) => W - (x - MM.x0) * s; // mirror so it reads like the plan in RTL? keep north up, east right
+  // north up, east right – the same orientation as the architect's plans
   const px = (x) => (x - MM.x0) * s;
   const pz = (z) => (z - MM.z0) * s;
-  void tx;
   mctx.clearRect(0, 0, W, W);
   mctx.fillStyle = 'rgba(150,170,120,0.25)';
   mctx.fillRect(px(SITE.lot.x0), pz(SITE.lot.z0), (SITE.lot.x1 - SITE.lot.x0) * s, (SITE.lot.z1 - SITE.lot.z0) * s);
