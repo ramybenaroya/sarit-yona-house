@@ -13,6 +13,7 @@ import { furnish, roofEquipment } from './furniture.js';
 import { buildSite } from './site.js';
 import { Environment } from './sky.js';
 import { Walker } from './walk.js';
+import { mergeStatic } from './merge.js';
 
 CameraControls.install({ THREE });
 
@@ -94,6 +95,15 @@ async function build() {
   buildProgress = 0.6; setProgress('שותל עצי זית וברושים…');
   await nextFrame();
   buildSite(M, groups, nightLights);
+  // bake static furniture, fixtures and planting into a few draw calls
+  for (const k of ['ground', 'upper', 'roof']) {
+    for (const c of [...groups[k].children]) if (c.isGroup) mergeStatic(c);
+  }
+  for (const c of [...groups.site.children]) if (c.isGroup && c.name !== 'twin') mergeStatic(c);
+  const loose = new THREE.Group();
+  for (const c of [...groups.site.children]) if (c.isMesh && !c.isInstancedMesh && c.geometry.attributes.color === undefined) loose.add(c);
+  groups.site.add(loose);
+  mergeStatic(loose);
   buildProgress = 0.85; setProgress('מכין את השמיים מעל ירושלים…');
   await nextFrame();
 
@@ -187,7 +197,7 @@ function updateOcclusion(dt) {
   });
   const v = new THREE.Vector3();
   for (const l of labels) {
-    if (!l.visible) continue;
+    if (!l.visible || l.userData.kind === 'room') continue;
     l.getWorldPosition(v);
     const dir = v.clone().sub(camera.position);
     const dist = dir.length();
@@ -337,12 +347,18 @@ function setMode(m) {
 
 let pendingWalkStart = null;
 
+// On tall (portrait) screens pull the camera back so the subject still fits.
+function framed(pos, target) {
+  const k = camera.aspect < 1 ? Math.min(2.1, 1 / camera.aspect * 0.85) : 1;
+  return pos.map((p, i) => target[i] + (p - target[i]) * k);
+}
+
 function flyTo(pos, target, floor) {
   if (mode === 'walk') setMode('orbit');
   if (floor) setFloorMode(floor);
   autoRotate = false;
   controls.smoothTime = 0.9;
-  controls.setLookAt(...pos, ...target, true).then(() => { controls.smoothTime = 0.35; });
+  controls.setLookAt(...framed(pos, target), ...target, true).then(() => { controls.smoothTime = 0.35; });
   $('room-card').classList.add('hidden');
 }
 
@@ -551,7 +567,7 @@ async function main() {
     $('hud').classList.remove('hidden');
     started = true;
     controls.smoothTime = 2.2;
-    controls.setLookAt(24, 15, 27, 5.6, 1.2, 5.8, true).then(() => { controls.smoothTime = 0.35; });
+    controls.setLookAt(...framed([24, 15, 27], [5.6, 1.2, 5.8]), 5.6, 1.2, 5.8, true).then(() => { controls.smoothTime = 0.35; });
     setFloorMode('all');
   };
 }
