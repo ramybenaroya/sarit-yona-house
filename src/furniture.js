@@ -731,6 +731,23 @@ function spaceMuralTextures() {
   return { map: tex(c), glow: tex(g) };
 }
 
+function duvetStarsTexture() {
+  const [c, ctx] = cnv(512, 512);
+  ctx.fillStyle = '#25407a';
+  ctx.fillRect(0, 0, 512, 512);
+  const rnd = seeded(515);
+  for (let i = 0; i < 46; i++) {
+    ctx.fillStyle = i % 4 ? '#f6c945' : '#ffffff';
+    starPath(ctx, rnd() * 512, rnd() * 512, 8 + rnd() * 10);
+    ctx.fill();
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([10, 12]);
+  ctx.strokeRect(14, 14, 484, 484);
+  return tex(c);
+}
+
 function ceilingStarsTexture() {
   const [c, ctx] = cnv(512, 512);
   const rnd = seeded(4242);
@@ -846,36 +863,40 @@ function boysRoom(M, lights, up) {
   stars.rotation.x = Math.PI / 2;
   put(stars, 9.2, LEVELS.upperCeiling - 0.004, 10.3);
 
-  // bunk bed along the east wall, ladder at the foot
-  const bx0 = 9.93, bx1 = 10.86, bz0 = 9.72, bz1 = 11.78;
-  for (const x of [bx0, bx1 - 0.06]) for (const z of [bz0, bz1 - 0.06]) g.add(bx(x, up, z, x + 0.06, up + 1.95, z + 0.06, white, 0.01));
-  for (const [y, duvet, pillowY] of [[0.22, navy, 0.62], [1.28, red, 1.68]]) {
-    g.add(bx(bx0 + 0.04, up + y, bz0 + 0.04, bx1 - 0.04, up + y + 0.06, bz1 - 0.04, wood));
-    g.add(bx(bx0 + 0.05, up + y + 0.06, bz0 + 0.06, bx1 - 0.05, up + y + 0.24, bz1 - 0.06, M.linen, 0.05));
-    g.add(bx(bx0 + 0.04, up + y + 0.2, bz0 + 0.05, bx1 - 0.04, up + y + 0.28, bz1 - 0.5, duvet, 0.04));
-    const p = cb(0.55, 0.13, 0.36, 0, 0, 0, M.linen, 0.06);
-    p.rotation.x = 0.3;
-    put(p, (bx0 + bx1) / 2, up + pillowY - 0.25, bz1 - 0.28);
-    // side boards
-    g.add(bx(bx1 - 0.05, up + y, bz0, bx1, up + y + 0.32, bz1, white));
+  // single kid's bed along the east wall, headboard against the south wall
+  const bx0 = 9.95, bx1 = 10.86, bz0 = 9.74, bz1 = 11.785;
+  g.add(bx(bx0, up + 0.06, bz0, bx1, up + 0.33, bz1, white, 0.01));
+  // storage drawers on the room side
+  for (const [z0, z1, m] of [[9.86, 10.76, sky], [10.82, 11.66, lime]]) {
+    g.add(bx(bx0 - 0.015, up + 0.08, z0, bx0, up + 0.3, z1, m, 0.005));
+    g.add(cyl(0.022, 0.022, 0.025, bx0 - 0.03, up + 0.19, (z0 + z1) / 2, M.white, 12).rotateZ(Math.PI / 2));
   }
-  // upper guard rail on the room side, open at the ladder
-  g.add(bx(bx0, up + 1.62, bz0 + 0.5, bx0 + 0.04, up + 1.7, bz1, white));
-  g.add(bx(bx0, up + 1.28, bz1 - 0.06, bx1, up + 1.7, bz1, white));
-  g.add(bx(bx0, up + 1.28, bz0, bx1, up + 1.7, bz0 + 0.06, white));
-  g.add(bx(bx0, up + 0.22, bz1 - 0.06, bx1, up + 0.8, bz1, white));
-  // ladder
-  g.add(bx(bx0 - 0.05, up, bz0 + 0.05, bx0 - 0.01, up + 1.7, bz0 + 0.09, yellow));
-  g.add(bx(bx0 - 0.05, up, bz0 + 0.43, bx0 - 0.01, up + 1.7, bz0 + 0.47, yellow));
-  for (let i = 1; i <= 5; i++) {
-    const r = cyl(0.016, 0.016, 0.38, bx0 - 0.03, up + i * 0.29, bz0 + 0.27, yellow, 8);
-    r.rotation.x = Math.PI / 2;
-    g.add(r);
-  }
-  // a stuffed toy on the top bunk
-  const bear = cyl(0.08, 0.1, 0.18, 0, 0, 0, orange, 12);
-  put(bear, 10.35, up + 1.65, 11.45);
-  put(mesh(new THREE.SphereGeometry(0.07, 14, 10), orange), 10.35, up + 1.8, 11.45);
+  g.add(bx(bx0 + 0.03, up + 0.33, bz0 + 0.06, bx1 - 0.02, up + 0.5, bz1 - 0.08, M.linen, 0.05));
+  // headboard with a navy padded panel, low footboard
+  g.add(bx(bx0, up + 0.06, bz1 - 0.07, bx1, up + 0.98, bz1, white, 0.02));
+  g.add(bx(bx0 + 0.06, up + 0.52, bz1 - 0.1, bx1 - 0.06, up + 0.92, bz1 - 0.07, navy, 0.03));
+  g.add(bx(bx0, up + 0.06, bz0, bx1, up + 0.62, bz0 + 0.05, white, 0.02));
+  // star-pattern duvet, draped over the room side
+  const duvetMat = new THREE.MeshStandardMaterial({ map: duvetStarsTexture(), roughness: 0.95 });
+  g.add(bx(bx0 - 0.02, up + 0.48, bz0 + 0.07, bx1 - 0.01, up + 0.57, bz1 - 0.55, duvetMat, 0.04));
+  g.add(bx(bx0 - 0.035, up + 0.27, bz0 + 0.07, bx0 - 0.015, up + 0.57, bz1 - 0.55, duvetMat));
+  const pillow = cb(0.6, 0.13, 0.38, 0, 0, 0, M.linen, 0.06);
+  pillow.rotation.x = 0.3;
+  put(pillow, (bx0 + bx1) / 2, up + 0.6, bz1 - 0.3);
+  const cushion = cb(0.28, 0.26, 0.09, 0, 0, 0, orange, 0.04);
+  cushion.rotation.x = 0.3;
+  put(cushion, 10.3, up + 0.7, bz1 - 0.58);
+  // teddy bear on the bed
+  put(cyl(0.08, 0.1, 0.18, 0, 0, 0, orange, 12), 10.62, up + 0.66, 11.25);
+  put(mesh(new THREE.SphereGeometry(0.07, 14, 10), orange), 10.62, up + 0.81, 11.25);
+  // clip-on reading lamp on the headboard
+  const clip = new THREE.Group();
+  clip.add(cyl(0.008, 0.008, 0.25, 0, 0.12, 0, M.blackMetal, 6));
+  const shade = mesh(new THREE.ConeGeometry(0.055, 0.1, 14, 1, true), yellow);
+  shade.position.set(0, 0.25, -0.04);
+  shade.rotation.x = -1.0;
+  clip.add(shade);
+  put(clip, 10.08, up + 0.98, bz1 - 0.035);
 
   // desk under the window with laptop, lamp and globe
   const dx0 = 8.15, dx1 = 9.75, dz0 = 11.2, dz1 = 11.795;
