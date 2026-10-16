@@ -41,6 +41,8 @@ export class Walker {
     this.joy = { x: 0, y: 0, id: null, ox: 0, oy: 0 };
     this.look = { id: null, x: 0, y: 0 };
     this.vy = 0;
+    // no-clip: walk through walls and furniture (floors and stairs still carry you)
+    this.noclip = true;
     this.buildColliders();
     this.bind();
   }
@@ -98,6 +100,8 @@ export class Walker {
       cands.push(lt + Math.min(f2.steps, Math.floor((f2.x1 - x) / d) + 1) * r);
     }
     if (SLABS.upper.some((rr) => inRect(rr, x, z))) cands.push(LEVELS.upper);
+    // the roof terrace is only reachable when walking through walls
+    if (this.noclip && SLABS.terrace.some((rr) => inRect(rr, x, z))) cands.push(LEVELS.upper);
     let best = -Infinity;
     for (const h of cands) if (h <= y + STEP_UP && h > best) best = h;
     if (best === -Infinity) best = Math.min(...cands);
@@ -242,8 +246,10 @@ export class Walker {
     const next = this.pos.clone().addScaledVector(fwd, f * speed * dt).addScaledVector(right, s * speed * dt);
     // climb or fall to the walking surface
     const target = this.floorAt(next.x, next.z, this.pos.y);
-    if (target > this.pos.y + STEP_UP) { next.x = this.pos.x; next.z = this.pos.z; }
-    this.collide(next);
+    if (!this.noclip) {
+      if (target > this.pos.y + STEP_UP) { next.x = this.pos.x; next.z = this.pos.z; }
+      this.collide(next);
+    }
     const ground = this.floorAt(next.x, next.z, this.pos.y);
     if (ground < next.y - 0.01) {
       this.vy -= 9.8 * dt;

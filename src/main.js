@@ -325,6 +325,7 @@ function setMode(m) {
     walker.enter(pendingWalkStart?.pos ?? new THREE.Vector3(11.9, LEVELS.courtyard, 5.25), pendingWalkStart?.yaw ?? Math.PI / 2);
     pendingWalkStart = null;
     $('minimap').classList.remove('hidden');
+    $('btn-noclip').classList.remove('hidden');
     showWalkHint();
     if (!isTouch) addCrosshair();
   } else {
@@ -339,6 +340,7 @@ function setMode(m) {
     controls.setLookAt(p.x, p.y, p.z, p.x + dir.x * 4, p.y + dir.y * 4, p.z + dir.z * 4, false);
     flyTo([26, 30, 30], [5.6, 1, 5.8], 'all');
     $('minimap').classList.add('hidden');
+    $('btn-noclip').classList.add('hidden');
     $('walk-hint').classList.add('hidden');
     removeCrosshair();
   }
@@ -387,8 +389,8 @@ let hintTimer;
 function showWalkHint() {
   const h = $('walk-hint');
   h.innerHTML = isTouch
-    ? 'ג׳ויסטיק בצד שמאל להליכה<br/>גרירה בצד ימין להסתכלות'
-    : 'קליק על המסך כדי להתחיל<br/><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> או החצים להליכה · עכבר להסתכלות<br/><kbd>Shift</kbd> לריצה · <kbd>Esc</kbd> ליציאה';
+    ? 'ג׳ויסטיק בצד שמאל להליכה<br/>גרירה בצד ימין להסתכלות<br/>אפשר לעבור דרך קירות — לכיבוי: כפתור 👻'
+    : 'קליק על המסך כדי להתחיל<br/><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> או החצים להליכה · עכבר להסתכלות<br/><kbd>Shift</kbd> לריצה · <kbd>Esc</kbd> ליציאה<br/>אפשר לעבור דרך קירות — לכיבוי: כפתור 👻';
   h.classList.remove('hidden', 'fade');
   clearTimeout(hintTimer);
   hintTimer = setTimeout(() => h.classList.add('fade'), 5500);
@@ -532,6 +534,12 @@ document.querySelectorAll('#floor-seg button').forEach((b) => {
     }
   };
 });
+$('btn-noclip').onclick = () => {
+  walker.noclip = !walker.noclip;
+  $('btn-noclip').classList.toggle('on', walker.noclip);
+  // leaving no-clip inside furniture or a wall: settle back onto the floor
+  if (!walker.noclip) walker.teleport(walker.pos.x, walker.pos.z, walker.pos.y + 0.1);
+};
 $('btn-help').onclick = () => $('help').classList.remove('hidden');
 $('help-close').onclick = () => $('help').classList.add('hidden');
 $('btn-quality').onclick = () => { quality = quality === 'high' ? 'low' : 'high'; applyQuality(); };
