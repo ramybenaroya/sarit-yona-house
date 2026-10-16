@@ -78,6 +78,7 @@ M.bulb.userData.emissiveNight = 3.0;
 let env, walker, controls, composer, n8ao, smaa, tvScreen;
 const labels = [];
 const nightLights = [];
+const glowMats = [];
 
 async function build() {
   setProgress('בונה קירות מאבן ירושלמית…');
@@ -91,6 +92,7 @@ async function build() {
   const f = furnish(M, groups);
   nightLights.push(...f.lights);
   tvScreen = f.tv;
+  glowMats.push(...f.glow);
   roofEquipment(M, groups.roof);
   buildProgress = 0.6; setProgress('שותל עצי זית וברושים…');
   await nextFrame();
@@ -108,7 +110,7 @@ async function build() {
   await nextFrame();
 
   env = new Environment(renderer, scene, { shadowSize: isTouch ? 2048 : 4096 });
-  env.setNightLights(nightLights, [M.lampShade, M.bulb]);
+  env.setNightLights(nightLights, [M.lampShade, M.bulb, ...glowMats]);
   for (const g of Object.values(groups)) {
     g.traverse((o) => {
       if (o.isPointLight) o.castShadow = false;

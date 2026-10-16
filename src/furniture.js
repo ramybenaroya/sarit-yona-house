@@ -621,6 +621,418 @@ function washer(M, door = true) {
 }
 
 // ---------------------------------------------------------------------------
+// Boy's room (upper floor, x 7.577–10.871, z 8.483–11.799)
+// ---------------------------------------------------------------------------
+function cnv(w, h) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  return [c, c.getContext('2d')];
+}
+function tex(c, wrap = false) {
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  if (wrap) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+
+function starPath(ctx, x, y, r, points = 5) {
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const a = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2;
+    const rr = i % 2 ? r * 0.45 : r;
+    ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+  }
+  ctx.closePath();
+}
+
+function soccerRugTexture() {
+  const [c, ctx] = cnv(768, 512);
+  for (let i = 0; i < 8; i++) {
+    ctx.fillStyle = i % 2 ? '#3f8f3f' : '#47a047';
+    ctx.fillRect(i * 96, 0, 96, 512);
+  }
+  ctx.strokeStyle = '#f4f4f0';
+  ctx.lineWidth = 7;
+  ctx.strokeRect(28, 28, 712, 456);
+  ctx.beginPath(); ctx.moveTo(384, 28); ctx.lineTo(384, 484); ctx.stroke();
+  ctx.beginPath(); ctx.arc(384, 256, 72, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeRect(28, 150, 96, 212); ctx.strokeRect(644, 150, 96, 212);
+  ctx.strokeRect(28, 206, 36, 100); ctx.strokeRect(704, 206, 36, 100);
+  ctx.fillStyle = '#f4f4f0';
+  ctx.beginPath(); ctx.arc(384, 256, 7, 0, Math.PI * 2); ctx.fill();
+  return tex(c);
+}
+
+// Night-sky mural; returns colour map and a glow map with just the stars.
+function spaceMuralTextures() {
+  const W = 1024, H = 820;
+  const [c, ctx] = cnv(W, H);
+  const [g, gx] = cnv(W, H);
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0c1636');
+  grad.addColorStop(0.6, '#1d2c63');
+  grad.addColorStop(1, '#3a3f8f');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+  gx.fillStyle = '#000';
+  gx.fillRect(0, 0, W, H);
+  const rnd = seeded(909);
+  for (let i = 0; i < 160; i++) {
+    const x = rnd() * W, y = rnd() * H * 0.92, r = 1 + rnd() * 2.6;
+    ctx.fillStyle = gx.fillStyle = `rgba(255,250,215,${0.6 + rnd() * 0.4})`;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    gx.beginPath(); gx.arc(x, y, r, 0, Math.PI * 2); gx.fill();
+  }
+  for (let i = 0; i < 14; i++) {
+    const x = rnd() * W, y = rnd() * H * 0.85, r = 7 + rnd() * 9;
+    ctx.fillStyle = gx.fillStyle = '#fff3b0';
+    starPath(ctx, x, y, r); ctx.fill();
+    starPath(gx, x, y, r); gx.fill();
+  }
+  // crescent moon
+  ctx.fillStyle = gx.fillStyle = '#fff1b8';
+  ctx.beginPath(); ctx.arc(820, 150, 62, 0, Math.PI * 2); ctx.fill();
+  gx.beginPath(); gx.arc(820, 150, 62, 0, Math.PI * 2); gx.fill();
+  ctx.fillStyle = '#0f1a3e'; gx.fillStyle = '#000';
+  ctx.beginPath(); ctx.arc(848, 132, 58, 0, Math.PI * 2); ctx.fill();
+  gx.beginPath(); gx.arc(848, 132, 58, 0, Math.PI * 2); gx.fill();
+  // planets
+  const planet = (x, y, r, a, b, ring) => {
+    const pg = ctx.createRadialGradient(x - r * 0.4, y - r * 0.4, r * 0.1, x, y, r);
+    pg.addColorStop(0, a); pg.addColorStop(1, b);
+    ctx.fillStyle = pg;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    if (ring) {
+      ctx.strokeStyle = 'rgba(240,210,150,0.85)'; ctx.lineWidth = 8;
+      ctx.beginPath(); ctx.ellipse(x, y, r * 1.8, r * 0.45, -0.3, 0, Math.PI * 2); ctx.stroke();
+    }
+  };
+  planet(230, 300, 70, '#f5c27a', '#c0703a', true);
+  planet(560, 520, 46, '#7fd0ff', '#2f6fb5', false);
+  planet(120, 640, 30, '#ff9d7a', '#b8452f', false);
+  // rocket with a dotted trail
+  ctx.save();
+  ctx.translate(690, 470); ctx.rotate(-0.6);
+  ctx.fillStyle = '#f2f2f2'; ctx.beginPath(); ctx.ellipse(0, 0, 26, 70, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#e0483a'; ctx.beginPath(); ctx.moveTo(-26, 30); ctx.lineTo(-48, 76); ctx.lineTo(-14, 56); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(26, 30); ctx.lineTo(48, 76); ctx.lineTo(14, 56); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(0, -48, 18, 24, 0, Math.PI, 0); ctx.fill();
+  ctx.fillStyle = '#5fb7ff'; ctx.beginPath(); ctx.arc(0, -8, 12, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffb347'; ctx.beginPath(); ctx.moveTo(-12, 70); ctx.lineTo(0, 120); ctx.lineTo(12, 70); ctx.fill();
+  ctx.restore();
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  for (let i = 0; i < 9; i++) { ctx.beginPath(); ctx.arc(720 + i * 30, 520 + i * 26, 4, 0, Math.PI * 2); ctx.fill(); }
+  // hills silhouette at the bottom (Jerusalem at night)
+  ctx.fillStyle = '#141d3f';
+  ctx.beginPath(); ctx.moveTo(0, H);
+  for (let x = 0; x <= W; x += 16) ctx.lineTo(x, H - 70 - Math.sin(x * 0.01) * 26 - Math.sin(x * 0.027) * 12);
+  ctx.lineTo(W, H); ctx.fill();
+  return { map: tex(c), glow: tex(g) };
+}
+
+function ceilingStarsTexture() {
+  const [c, ctx] = cnv(512, 512);
+  const rnd = seeded(4242);
+  ctx.fillStyle = '#e9f7c8';
+  for (let i = 0; i < 40; i++) {
+    starPath(ctx, 20 + rnd() * 472, 20 + rnd() * 472, 6 + rnd() * 9);
+    ctx.fill();
+  }
+  ctx.beginPath(); ctx.arc(256, 256, 26, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,1)';
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath(); ctx.arc(270, 246, 24, 0, Math.PI * 2); ctx.fill();
+  return tex(c);
+}
+
+function posterTexture(kind) {
+  const [c, ctx] = cnv(400, 560);
+  ctx.textAlign = 'center';
+  if (kind === 'soccer') {
+    const g = ctx.createLinearGradient(0, 0, 0, 560);
+    g.addColorStop(0, '#d7263d'); g.addColorStop(1, '#8e1424');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 400, 560);
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(200, 250, 120, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#1b1b1b';
+    starPath(ctx, 200, 250, 46, 5); ctx.fill();
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
+      starPath(ctx, 200 + Math.cos(a) * 92, 250 + Math.sin(a) * 92, 22, 5); ctx.fill();
+    }
+    ctx.font = '700 64px Heebo, Arial, sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('GOAL!', 200, 470);
+    ctx.font = '500 30px Heebo, Arial, sans-serif';
+    ctx.fillText('10', 200, 90);
+  } else {
+    ctx.fillStyle = '#101a3a'; ctx.fillRect(0, 0, 400, 560);
+    const rnd = seeded(77);
+    ctx.fillStyle = '#fff';
+    for (let i = 0; i < 70; i++) { ctx.beginPath(); ctx.arc(rnd() * 400, rnd() * 560, rnd() * 1.6 + 0.4, 0, Math.PI * 2); ctx.fill(); }
+    const cols = ['#f5a623', '#d0d0d0', '#e8b26a', '#3a8fe0', '#d2563c', '#e9c37a', '#c9a35a', '#8fd6e8', '#4a6ad8'];
+    cols.forEach((col, i) => {
+      const r = [26, 8, 12, 13, 10, 22, 19, 15, 14][i];
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(200, 70 + i * 52, r, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.strokeStyle = '#e9c37a'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.ellipse(200, 330, 36, 8, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.font = '700 40px Heebo, Arial, sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('מערכת השמש', 200, 540);
+  }
+  return tex(c);
+}
+
+function soccerBallTexture() {
+  const [c, ctx] = cnv(512, 256);
+  ctx.fillStyle = '#f7f7f5'; ctx.fillRect(0, 0, 512, 256);
+  ctx.fillStyle = '#1c1c1c';
+  for (let row = 0; row < 3; row++) {
+    for (let i = 0; i < 6; i++) {
+      const x = (i + (row % 2) * 0.5) * (512 / 6), y = 40 + row * 88;
+      ctx.beginPath();
+      for (let k = 0; k < 5; k++) {
+        const a = (k / 5) * Math.PI * 2 - Math.PI / 2;
+        ctx.lineTo(x + Math.cos(a) * 22, y + Math.sin(a) * 26);
+      }
+      ctx.fill();
+    }
+  }
+  return tex(c, true);
+}
+
+function globeTexture() {
+  const [c, ctx] = cnv(512, 256);
+  ctx.fillStyle = '#2f78c4'; ctx.fillRect(0, 0, 512, 256);
+  ctx.fillStyle = '#5aa64a';
+  const rnd = seeded(31);
+  for (let i = 0; i < 22; i++) {
+    ctx.beginPath();
+    ctx.ellipse(rnd() * 512, 40 + rnd() * 176, 20 + rnd() * 50, 12 + rnd() * 32, rnd() * 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#eef3f6'; ctx.fillRect(0, 0, 512, 14); ctx.fillRect(0, 242, 512, 14);
+  return tex(c, true);
+}
+
+function boysRoom(M, lights, up) {
+  const g = new THREE.Group();
+  const glow = [];
+  const put = (o, x, y, z, ry = 0) => { const h = new THREE.Group(); h.add(o); h.position.set(x, y, z); h.rotation.y = ry; g.add(h); return o; };
+  const col = (c, r = 0.55) => new THREE.MeshStandardMaterial({ color: c, roughness: r });
+  const navy = col(0x27406e, 0.9), red = col(0xd64535, 0.6), orange = col(0xf08c2c, 0.6), yellow = col(0xf2c230, 0.5);
+  const lime = col(0x7cc34a, 0.6), sky = col(0x5fb2e6, 0.6), wood = M.veneer, white = M.cabinetWhite;
+
+  // accent wall: night-sky mural on the east wall, stars glow after dark
+  const mural = spaceMuralTextures();
+  const muralMat = new THREE.MeshStandardMaterial({ map: mural.map, emissiveMap: mural.glow, emissive: 0xfff2c0, emissiveIntensity: 0, roughness: 0.9 });
+  muralMat.userData.emissiveNight = 1.1;
+  glow.push(muralMat);
+  const mz0 = 9.09, mz1 = 11.795, mh = LEVELS.upperCeiling - up;
+  const muralMesh = mesh(new THREE.PlaneGeometry(mz1 - mz0, mh), muralMat, false);
+  put(muralMesh, 10.868, up + mh / 2, (mz0 + mz1) / 2, -Math.PI / 2);
+
+  // glow-in-the-dark stars on the ceiling
+  const starsMat = new THREE.MeshStandardMaterial({
+    map: ceilingStarsTexture(), transparent: true, alphaTest: 0.2, emissive: 0xd8ff9a, emissiveIntensity: 0, roughness: 0.9,
+  });
+  starsMat.emissiveMap = starsMat.map;
+  starsMat.userData.emissiveNight = 1.6;
+  glow.push(starsMat);
+  const stars = mesh(new THREE.PlaneGeometry(2.6, 2.6), starsMat, false);
+  stars.rotation.x = Math.PI / 2;
+  put(stars, 9.2, LEVELS.upperCeiling - 0.004, 10.3);
+
+  // bunk bed along the east wall, ladder at the foot
+  const bx0 = 9.93, bx1 = 10.86, bz0 = 9.72, bz1 = 11.78;
+  for (const x of [bx0, bx1 - 0.06]) for (const z of [bz0, bz1 - 0.06]) g.add(bx(x, up, z, x + 0.06, up + 1.95, z + 0.06, white, 0.01));
+  for (const [y, duvet, pillowY] of [[0.22, navy, 0.62], [1.28, red, 1.68]]) {
+    g.add(bx(bx0 + 0.04, up + y, bz0 + 0.04, bx1 - 0.04, up + y + 0.06, bz1 - 0.04, wood));
+    g.add(bx(bx0 + 0.05, up + y + 0.06, bz0 + 0.06, bx1 - 0.05, up + y + 0.24, bz1 - 0.06, M.linen, 0.05));
+    g.add(bx(bx0 + 0.04, up + y + 0.2, bz0 + 0.05, bx1 - 0.04, up + y + 0.28, bz1 - 0.5, duvet, 0.04));
+    const p = cb(0.55, 0.13, 0.36, 0, 0, 0, M.linen, 0.06);
+    p.rotation.x = 0.3;
+    put(p, (bx0 + bx1) / 2, up + pillowY - 0.25, bz1 - 0.28);
+    // side boards
+    g.add(bx(bx1 - 0.05, up + y, bz0, bx1, up + y + 0.32, bz1, white));
+  }
+  // upper guard rail on the room side, open at the ladder
+  g.add(bx(bx0, up + 1.62, bz0 + 0.5, bx0 + 0.04, up + 1.7, bz1, white));
+  g.add(bx(bx0, up + 1.28, bz1 - 0.06, bx1, up + 1.7, bz1, white));
+  g.add(bx(bx0, up + 1.28, bz0, bx1, up + 1.7, bz0 + 0.06, white));
+  g.add(bx(bx0, up + 0.22, bz1 - 0.06, bx1, up + 0.8, bz1, white));
+  // ladder
+  g.add(bx(bx0 - 0.05, up, bz0 + 0.05, bx0 - 0.01, up + 1.7, bz0 + 0.09, yellow));
+  g.add(bx(bx0 - 0.05, up, bz0 + 0.43, bx0 - 0.01, up + 1.7, bz0 + 0.47, yellow));
+  for (let i = 1; i <= 5; i++) {
+    const r = cyl(0.016, 0.016, 0.38, bx0 - 0.03, up + i * 0.29, bz0 + 0.27, yellow, 8);
+    r.rotation.x = Math.PI / 2;
+    g.add(r);
+  }
+  // a stuffed toy on the top bunk
+  const bear = cyl(0.08, 0.1, 0.18, 0, 0, 0, orange, 12);
+  put(bear, 10.35, up + 1.65, 11.45);
+  put(mesh(new THREE.SphereGeometry(0.07, 14, 10), orange), 10.35, up + 1.8, 11.45);
+
+  // desk under the window with laptop, lamp and globe
+  const dx0 = 8.15, dx1 = 9.75, dz0 = 11.2, dz1 = 11.795;
+  g.add(bx(dx0, up + 0.72, dz0, dx1, up + 0.75, dz1, wood));
+  g.add(bx(dx0, up, dz0 + 0.03, dx0 + 0.42, up + 0.72, dz1, sky));
+  for (let i = 0; i < 3; i++) g.add(bx(dx0 + 0.02, up + 0.06 + i * 0.22, dz0 + 0.02, dx0 + 0.4, up + 0.24 + i * 0.22, dz0 + 0.035, [red, yellow, lime][i]));
+  g.add(bx(dx1 - 0.05, up, dz0 + 0.05, dx1 - 0.02, up + 0.72, dz1 - 0.05, M.blackMetal));
+  // laptop
+  const lap = new THREE.Group();
+  lap.add(bx(-0.17, 0, -0.12, 0.17, 0.015, 0.12, M.steelGrey));
+  const screenMat = new THREE.MeshStandardMaterial({ color: 0x1a2a4a, emissive: 0x4a7ad0, emissiveIntensity: 0.6, roughness: 0.2 });
+  const scr = bx(-0.17, 0, -0.008, 0.17, 0.23, 0.008, screenMat);
+  scr.position.set(0, 0.125, 0.115);
+  scr.rotation.x = 0.25;
+  lap.add(scr);
+  put(lap, 9.0, up + 0.75, 11.42);
+  // desk lamp
+  const lamp = new THREE.Group();
+  lamp.add(cyl(0.07, 0.08, 0.02, 0, 0.01, 0, M.blackMetal, 16));
+  const arm = cyl(0.01, 0.01, 0.42, 0, 0.22, 0, M.blackMetal, 6);
+  arm.rotation.z = 0.25;
+  lamp.add(arm);
+  const head = mesh(new THREE.ConeGeometry(0.07, 0.12, 16, 1, true), orange);
+  head.position.set(-0.1, 0.42, 0);
+  head.rotation.z = 0.9;
+  lamp.add(head);
+  const dl = new THREE.PointLight(0xffd59a, 0, 2.5, 2);
+  dl.position.set(-0.16, 0.36, 0);
+  dl.userData.night = 1.5;
+  lamp.add(dl);
+  lights.push(dl);
+  put(lamp, 9.55, up + 0.75, 11.55);
+  // globe + pencil cup + books
+  const globe = mesh(new THREE.SphereGeometry(0.11, 24, 16), new THREE.MeshStandardMaterial({ map: globeTexture(), roughness: 0.4 }));
+  globe.rotation.z = 0.41;
+  put(globe, 8.45, up + 0.94, 11.55);
+  put(cyl(0.012, 0.012, 0.08, 0, 0, 0, M.blackMetal, 6), 8.45, up + 0.79, 11.55);
+  put(cyl(0.04, 0.04, 0.1, 0, 0, 0, red, 14), 8.7, up + 0.8, 11.65);
+  [lime, sky, yellow].forEach((m, i) => g.add(bx(8.25 + i * 0.045, up + 0.75, 11.62, 8.29 + i * 0.045, up + 0.98, 11.78, m)));
+  // swivel chair
+  const ch = new THREE.Group();
+  ch.add(cyl(0.22, 0.22, 0.03, 0, 0.03, 0, M.blackMetal, 5));
+  ch.add(cyl(0.025, 0.025, 0.4, 0, 0.23, 0, M.chrome, 8));
+  ch.add(bx(-0.22, 0.43, -0.21, 0.22, 0.5, 0.21, sky, 0.04));
+  ch.add(bx(-0.2, 0.52, 0.17, 0.2, 0.9, 0.23, sky, 0.05));
+  put(ch, 8.95, up, 10.85, Math.PI);
+
+  // cube shelf on the west wall with toy bins and books
+  const sx0 = 7.577, sx1 = 7.98, sz0 = 9.8, sz1 = 11.0, sh = 1.2;
+  g.add(bx(sx0, up, sz0, sx1, up + sh, sz1, white));
+  const binMats = [red, yellow, sky, lime, orange, navy];
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+    const z0 = sz0 + 0.025 + c * 0.39, y0 = up + 0.025 + r * 0.39;
+    if ((r + c) % 3 === 1) {
+      for (let k = 0; k < 6; k++) g.add(bx(sx1 - 0.3, y0 + 0.02, z0 + 0.03 + k * 0.055, sx1 + 0.002, y0 + 0.26 + (k % 3) * 0.02, z0 + 0.075 + k * 0.055, binMats[(k + r) % 6]));
+    } else {
+      g.add(bx(sx1 - 0.33, y0 + 0.01, z0 + 0.02, sx1 + 0.005, y0 + 0.33, z0 + 0.34, binMats[(r * 3 + c) % 6], 0.02));
+    }
+  }
+  // rocket model + trophy on top of the shelf
+  const rocket = new THREE.Group();
+  rocket.add(cyl(0.05, 0.05, 0.3, 0, 0.2, 0, M.white, 16));
+  const nose = mesh(new THREE.ConeGeometry(0.05, 0.12, 16), red);
+  nose.position.y = 0.41;
+  rocket.add(nose);
+  for (let i = 0; i < 3; i++) {
+    const fin = bx(-0.005, 0.05, 0.03, 0.005, 0.16, 0.1, red);
+    const fh = new THREE.Group(); fh.add(fin); fh.rotation.y = (i / 3) * Math.PI * 2;
+    rocket.add(fh);
+  }
+  put(rocket, 7.78, up + sh, 10.385);
+  const trophy = new THREE.Group();
+  trophy.add(cyl(0.06, 0.07, 0.04, 0, 0.02, 0, M.blackMetal, 12));
+  trophy.add(cyl(0.015, 0.015, 0.1, 0, 0.09, 0, M.brass, 8));
+  trophy.add(cyl(0.07, 0.035, 0.1, 0, 0.19, 0, M.brass, 16));
+  put(trophy, 7.78, up + sh, 10.9);
+
+  // posters + flag garland on the west wall, mini basketball hoop on the north wall
+  const poster = (kind, z) => {
+    const m = new THREE.MeshStandardMaterial({ map: posterTexture(kind), roughness: 0.8 });
+    const p = mesh(new THREE.PlaneGeometry(0.42, 0.59), m, false);
+    put(p, 7.58, up + 1.8, z, Math.PI / 2);
+  };
+  poster('soccer', 10.05);
+  poster('space', 10.72);
+  const flagCols = [red, yellow, sky, lime, orange, navy];
+  const tri = new THREE.Shape();
+  tri.moveTo(-0.07, 0); tri.lineTo(0.07, 0); tri.lineTo(0, -0.16); tri.closePath();
+  const triGeo = new THREE.ShapeGeometry(tri);
+  for (let i = 0; i < 12; i++) {
+    const t = i / 11;
+    const z = 9.75 + t * 1.9;
+    const sag = Math.sin(t * Math.PI) * 0.16;
+    const f = mesh(triGeo, flagCols[i % 6], false);
+    f.material = flagCols[i % 6].clone();
+    f.material.side = THREE.DoubleSide;
+    put(f, 7.59, up + 2.47 - sag, z, Math.PI / 2);
+  }
+  const hoop = new THREE.Group();
+  hoop.add(bx(-0.3, 0, -0.012, 0.3, 0.42, 0.012, M.white));
+  hoop.add(bx(-0.12, 0.06, 0.012, 0.12, 0.22, 0.016, red));
+  const ring = mesh(new THREE.TorusGeometry(0.12, 0.01, 8, 24), orange);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.set(0, 0.06, 0.14);
+  hoop.add(ring);
+  const net = mesh(new THREE.CylinderGeometry(0.12, 0.08, 0.18, 12, 1, true), new THREE.MeshStandardMaterial({ color: 0xffffff, wireframe: true }), false);
+  net.position.set(0, -0.03, 0.14);
+  hoop.add(net);
+  put(hoop, 8.62, up + 1.85, 8.495);
+
+  // soccer-pitch rug, ball, car, lego, bean bag
+  const rugMat = new THREE.MeshStandardMaterial({ map: soccerRugTexture(), roughness: 1 });
+  const rugM = bx(-0.9, 0.003, -0.6, 0.9, 0.014, 0.6, rugMat, 0.004);
+  rugM.castShadow = false;
+  put(rugM, 9.0, up, 10.15, Math.PI / 2);
+  put(mesh(new THREE.SphereGeometry(0.11, 24, 16), new THREE.MeshStandardMaterial({ map: soccerBallTexture(), roughness: 0.5 })), 9.35, up + 0.11, 9.55);
+  const car = new THREE.Group();
+  car.add(bx(-0.12, 0.03, -0.06, 0.12, 0.08, 0.06, red, 0.015));
+  car.add(bx(-0.05, 0.08, -0.05, 0.06, 0.12, 0.05, sky, 0.01));
+  for (const x of [-0.08, 0.08]) for (const z of [-0.065, 0.065]) {
+    const w = cyl(0.03, 0.03, 0.02, x, 0.03, z, M.blackMetal, 12); w.rotation.x = Math.PI / 2; car.add(w);
+  }
+  put(car, 8.55, up, 10.6, 0.6);
+  for (let i = 0; i < 7; i++) {
+    const L = new THREE.Group();
+    L.add(bx(-0.04, 0, -0.02, 0.04, 0.03, 0.02, binMats[i % 6]));
+    for (const sx of [-0.02, 0.02]) L.add(cyl(0.008, 0.008, 0.008, sx, 0.034, 0, binMats[i % 6], 8));
+    put(L, 8.85 + (i % 4) * 0.09, up + 0.014 + Math.floor(i / 4) * 0.03, 10.35 + (i % 3) * 0.06, i * 0.7);
+  }
+  const bag = mesh(new THREE.SphereGeometry(0.36, 24, 16), orange);
+  bag.scale.set(1, 0.62, 1);
+  put(bag, 7.98, up + 0.22, 11.42);
+
+  // Saturn pendant
+  const sat = new THREE.Group();
+  sat.add(cyl(0.004, 0.004, 0.45, 0, -0.225, 0, M.blackMetal, 6));
+  const planetMat = new THREE.MeshStandardMaterial({ color: 0xf2b55e, emissive: 0xffc070, emissiveIntensity: 0, roughness: 0.6 });
+  planetMat.userData.emissiveNight = 0.8;
+  glow.push(planetMat);
+  const pl = mesh(new THREE.SphereGeometry(0.16, 28, 18), planetMat, false);
+  pl.position.y = -0.6;
+  sat.add(pl);
+  const sring = mesh(new THREE.TorusGeometry(0.27, 0.018, 8, 40), col(0xe8cf9a, 0.5), false);
+  sring.rotation.x = Math.PI / 2 - 0.35;
+  sring.position.y = -0.6;
+  sat.add(sring);
+  const sl = new THREE.PointLight(0xffc98a, 0, 6, 2);
+  sl.position.y = -0.8;
+  sl.userData.night = 5;
+  sat.add(sl);
+  lights.push(sl);
+  put(sat, 9.2, LEVELS.upperCeiling, 10.25);
+
+  return { group: g, glow };
+}
+
+// ---------------------------------------------------------------------------
 // Public: furnish every room. Returns light list (for night mode) and TV.
 // ---------------------------------------------------------------------------
 export function furnish(M, groups) {
@@ -799,21 +1211,14 @@ export function furnish(M, groups) {
   U.add(shower(M, 6.5, 10.022, 7.471, 11.799, 6.5, 10.75, 11.799, [6.98, 11.2], up));
   for (const z of [10.4, 11.3]) add(U, spot(M), 5.6, LEVELS.upperCeiling, z);
 
-  // Upper bedroom
-  add(U, rug(M, 2.3, 2.3, M.rugMaster), 9.175, up, 10.5);
-  add(U, bed(M, 1.6, 2.0, { throwMat: M.fabricGreen, head: M.fabricBlush, headH: 0.9 }), 9.175, up, 10.8, FACE.north);
-  add(U, nightstand(M, lights), 8.1, up, 11.55, FACE.north);
-  add(U, nightstand(M, lights), 10.25, up, 11.55, FACE.north);
+  // Upper bedroom: a 9-year-old boy's room (space + sports)
+  const boy = boysRoom(M, lights, up);
+  U.add(boy.group);
   add(U, wardrobe(M, 1.77, 2.5, 0.6, 3), 9.986, up, 8.783, FACE.south);
-  add(U, table(M, 1.2, 0.55, 0.75, { top: M.veneer }), 10.6, up, 10.25, Math.PI / 2);
-  add(U, chair(M, M.fabricSofa), 10.1, up, 10.25, FACE.east);
-  add(U, painting(M, 0.7, 0.9, 66, ['#efe6d6', '#c0714f', '#7c8560', '#d9b26a']), 7.58, up + 1.5, 10.4, FACE.east);
-  add(U, plant(M, 'olive', 0.9), 7.95, up, 9.95);
-  add(U, pendant(M, lights, 0.45, { r: 0.26, mat: M.lampShade, intensity: 5 }), 9.175, LEVELS.upperCeiling, 10.2);
 
   groups.ground.add(G);
   groups.upper.add(U);
-  return { lights, tv: tv.userData.screen };
+  return { lights, tv: tv.userData.screen, glow: boy.glow };
 }
 
 // ---------------------------------------------------------------------------

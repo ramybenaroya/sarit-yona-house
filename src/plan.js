@@ -146,7 +146,7 @@ export const ROOMS = {
       rects: [[1.377, 8.483, 4.574, 11.499]], label: [3.0, 9.9] },
     { id: 'upperBath', he: 'חדר רחצה', en: 'Bathroom', floor: 'bathTile', wall: 'bathWall',
       rects: [[4.675, 10.022, 7.471, 11.799]], label: [5.9, 10.8] },
-    { id: 'bedroom', he: 'חדר שינה', en: 'Bedroom', floor: 'oak', wall: 'paint',
+    { id: 'bedroom', he: 'חדר הילד', en: "Boy's room", floor: 'oak', wall: 'paint',
       rects: [[7.577, 8.483, 10.871, 11.799]], label: [9.2, 9.8] },
   ],
 };
