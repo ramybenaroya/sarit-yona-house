@@ -83,6 +83,7 @@ async function build() {
   await nextFrame();
   buildArchitecture(M, groups);
   buildOpenings(M, groups);
+  buildTwin();
   buildProgress = 0.35; setProgress('מרהט את החדרים…');
   await nextFrame();
   await Promise.race([document.fonts.load('600 60px Heebo'), sleep(2500)]);
@@ -109,6 +110,19 @@ async function build() {
   setupComposer();
   updateTime();
   buildProgress = 1; setProgress();
+}
+
+// The house is one half of a semi-detached pair: show the neighbouring unit as
+// a mirrored shell (architecture batches only, no interior or furniture).
+function buildTwin() {
+  const twin = new THREE.Group();
+  twin.name = 'twin';
+  for (const k of ['ground', 'groundCeiling', 'upper', 'roof']) {
+    for (const o of groups[k].children) if (o.isMesh) twin.add(o.clone());
+  }
+  twin.scale.x = -1;
+  twin.position.x = -0.06;
+  groups.site.add(twin);
 }
 
 // ---------------------------------------------------------------------------

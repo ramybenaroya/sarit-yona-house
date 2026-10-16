@@ -143,10 +143,10 @@ function jerusalemStone() {
         const s = Math.sin((x * Math.cos(bl.tilt) + y * Math.sin(bl.tilt)) * 0.9 + fine * 6);
         const chisel = Math.max(0, s) * 0.12;
         const pit = fine > 0.93 ? -0.25 : 0;
-        const base = 0.84 + (bl.tone - 0.5) * 0.12 + (big - 0.5) * 0.12 + pit * 0.3;
+        const base = 0.9 + (bl.tone - 0.5) * 0.1 + (big - 0.5) * 0.1 + pit * 0.3;
         // warm cream with a slight pink/gold variation per block
         const warm = (bl.tone - 0.5) * 10;
-        r = 240 * base + warm + 4; g = 221 * base + warm * 0.4; b = 180 * base - warm * 0.3;
+        r = 238 * base + warm + 4; g = 224 * base + warm * 0.4; b = 190 * base - warm * 0.3;
         h = 0.55 + big * 0.25 + chisel + pit * 0.5 + fine * 0.08;
       }
       const j = i * 4;
@@ -247,6 +247,20 @@ function wallTiles({ w = 0.3, h = 0.6, base = [228, 224, 216], joint = '#c9c4ba'
   }
   const normal = heightToNormal(height, W, W, 1.2);
   return { map: canvasTexture(c), normalMap: canvasTexture(normal, false), size: M };
+}
+
+// Clumpy foliage relief for the cypress crowns
+function foliageNormal() {
+  const W = 256;
+  const noise = makeValueNoise(64, 5);
+  const noise2 = makeValueNoise(64, 9);
+  const h = new Float32Array(W * W);
+  for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+    const a = fbm(noise, x / 8, y / 8, 3, 32);
+    const b = noise2(x / 3, y / 3);
+    h[y * W + x] = Math.pow(a, 1.6) * 0.8 + b * 0.25;
+  }
+  return canvasTexture(heightToNormal(h, W, W, 6), false);
 }
 
 // Roller-shutter slats (Israeli "trisim")
@@ -406,6 +420,7 @@ export function createMaterials(renderer, manager) {
   M.stone = withScale(new THREE.MeshStandardMaterial({
     map: stone.map, normalMap: stone.normalMap, normalScale: new THREE.Vector2(0.9, 0.9), roughness: 0.88,
   }), stone.size);
+  M.stone.color.setRGB(1.12, 1.1, 1.06);
   M.coping = new THREE.MeshStandardMaterial({ color: 0xece2cc, roughness: 0.7, normalMap: stone.normalMap, normalScale: new THREE.Vector2(0.3, 0.3) });
   M.coping.userData.uvScale = 0.5;
   M.paint = withScale(new THREE.MeshStandardMaterial({
@@ -478,6 +493,9 @@ export function createMaterials(renderer, manager) {
   M.rugMaster = new THREE.MeshStandardMaterial({ map: rugTexture(['#d8c8b8', '#a98a79', '#7a5d52'], 8), roughness: 1 });
   M.rugPlay = new THREE.MeshStandardMaterial({ map: rugTexture(['#a9c4c2', '#f1e7c9', '#e09f7d'], 12), roughness: 1 });
   M.leaf = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, vertexColors: true });
+  const fol = foliageNormal();
+  fol.repeat.set(7, 24);
+  M.cypress = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.92, vertexColors: true, normalMap: fol, normalScale: new THREE.Vector2(1.6, 1.6) });
   M.pot = new THREE.MeshStandardMaterial({ color: 0xb8714d, roughness: 0.85 });
   M.potGrey = new THREE.MeshStandardMaterial({ color: 0x9a968f, roughness: 0.8 });
   M.soil = new THREE.MeshStandardMaterial({ color: 0x4a3a2c, roughness: 1 });

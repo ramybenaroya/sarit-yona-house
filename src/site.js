@@ -15,7 +15,7 @@ function mesh(geo, mat, shadow = true) {
 // ---------------------------------------------------------------------------
 // Trees
 // ---------------------------------------------------------------------------
-export function oliveTree(M, scale = 1, seed = 1) {
+export function oliveTree(M, scale = 1, seed = 1, detailed = false) {
   const g = new THREE.Group();
   const rnd = seeded(seed * 97 + 13);
   // gnarled multi-stem trunk
@@ -35,15 +35,23 @@ export function oliveTree(M, scale = 1, seed = 1) {
     const tube = mesh(new THREE.TubeGeometry(curve, 16, 0.09 * scale * (1 - s * 0.15), 8), M.bark);
     g.add(tube);
   }
-  // silvery canopy clumps
-  const n = 16;
+  // silvery canopy: soft inner clumps wrapped in thousands of narrow leaves
+  const n = detailed ? 11 : 16;
   for (let i = 0; i < n; i++) {
     const a = rnd() * Math.PI * 2;
     const rr = (0.3 + rnd() * 1.0) * scale;
-    const b = foliageBlob(M, (0.45 + rnd() * 0.35) * scale, 0x8e9b74, rnd, 2);
-    b.position.set(Math.cos(a) * rr, (1.9 + rnd() * 1.1) * scale, Math.sin(a) * rr);
+    const r = (0.45 + rnd() * 0.35) * scale;
+    const cx = Math.cos(a) * rr, cy = (1.9 + rnd() * 1.1) * scale, cz = Math.sin(a) * rr;
+    const b = foliageBlob(M, detailed ? r * 0.55 : r, detailed ? 0x5d6a4a : 0x8e9b74, rnd, 2);
+    b.position.set(cx, cy, cz);
     b.scale.y = 0.7;
     g.add(b);
+    if (detailed) {
+      g.add(leafCanopy(M, {
+        count: 520, radius: [r * 1.05, r * 0.8, r * 1.05], center: [cx, cy, cz],
+        leaf: [0.04 * scale + 0.012, 0.13 * scale + 0.025], color: 0x9aa483, rnd,
+      }));
+    }
   }
   return g;
 }
@@ -80,7 +88,7 @@ export function cypressTree(M, h = 7, seed = 1) {
   }
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
   geo.computeVertexNormals();
-  const crown = mesh(geo, M.leaf);
+  const crown = mesh(geo, M.cypress);
   crown.rotation.z = (rnd() - 0.5) * 0.04;
   g.add(crown);
   return g;
@@ -100,11 +108,16 @@ function pineTree(M, h, seed) {
   return g;
 }
 
-function shrub(M, r, color, seed) {
-  const b = foliageBlob(M, r, color, seeded(seed), 1);
-  b.scale.y = 0.75;
-  b.position.y = r * 0.6;
-  return b;
+function shrub(M, r, color, seed, flowers = null) {
+  const g = new THREE.Group();
+  const rnd = seeded(seed);
+  const core = foliageBlob(M, r * 0.7, 0x4d6640, rnd, 1);
+  core.scale.y = 0.7;
+  core.position.y = r * 0.5;
+  g.add(core);
+  g.add(leafCanopy(M, { count: 160, radius: [r, r * 0.75, r], center: [0, r * 0.55, 0], leaf: [0.025, 0.09], color, rnd }));
+  if (flowers) g.add(leafCanopy(M, { count: 70, radius: [r * 1.02, r * 0.85, r * 1.02], center: [0, r * 0.7, 0], leaf: [0.03, 0.06], color: flowers, rnd }));
+  return g;
 }
 
 // ---------------------------------------------------------------------------
@@ -334,11 +347,20 @@ export function buildSite(M, groups, lights) {
     const z = -0.7 - i * 0.75;
     b.box(7.35 + (i % 2) * 0.25, LEVELS.lawn, z - 0.25, 8.15 + (i % 2) * 0.25, LEVELS.lawn + 0.025, z + 0.25, { py: M.paving, px: M.stone, nx: M.stone, pz: M.stone, nz: M.stone });
   }
+  // the neighbouring twin's yard: mirrored courtyard paving, path and garden walls
+  const mx = (x) => -0.06 - x;
+  b.box(mx(C.x1), LEVELS.lawn, C.z0, mx(5.672), LEVELS.courtyard, C.z1, { py: M.paving, nx: M.stone, nz: M.stone });
+  b.box(mx(Pp.x1), LEVELS.lawn, Pp.z0, mx(Pp.x0), LEVELS.courtyard - 0.02, Pp.z1, { py: M.paving, px: M.stone, nx: M.stone });
+  b.box(mx(5.672), LEVELS.lawn, -0.65, mx(0.177), LEVELS.outside + 0.01, 0, { py: M.concrete, nz: M.concrete });
+  b.box(mx(11.078), LEVELS.lawn, 12.002, mx(1.174), LEVELS.outside + 0.01, 12.35, { py: M.concrete, pz: M.concrete });
+  b.box(mx(Pp.x0), LEVELS.lawn - 0.3, L.z0 - 6, L.x0 - 6, LEVELS.lawn, L.z1 + 6, { py: M.grass });
   // boundary walls in Jerusalem stone
   const wallH = 1.1, wy = LEVELS.lawn;
   const stoneWall = (x0, z0, x1, z1, h = wallH) => {
     b.box(x0, wy, z0, x1, wy + h, z1, { ...ALL(M.stone), py: M.coping });
   };
+  stoneWall(mx(Pp.x0), L.z0 - 0.25, L.x0, L.z0);
+  stoneWall(mx(Pp.x0), L.z1, L.x0, L.z1 + 0.25);
   stoneWall(L.x0, L.z0 - 0.25, Pp.x0, L.z0);
   stoneWall(L.x0, L.z1, Pp.x0, L.z1 + 0.25);
   stoneWall(Pp.x1, L.z0 - 0.25, Pp.x1 + 0.25, 4.4);
@@ -359,34 +381,33 @@ export function buildSite(M, groups, lights) {
 
   // planting
   const put = (obj, x, z, y = LEVELS.lawn, rot = 0) => { obj.position.set(x, y, z); obj.rotation.y = rot; site.add(obj); return obj; };
-  put(oliveTree(M, 1.15, 1), 3.2, -2.7);
-  put(oliveTree(M, 0.9, 2), 10.2, -2.4);
-  put(oliveTree(M, 1.05, 3), 3.0, 14.0);
-  put(oliveTree(M, 0.85, 4), 9.3, 14.3);
+  put(oliveTree(M, 1.15, 1, true), 3.2, -2.7);
+  put(oliveTree(M, 0.9, 2, true), 10.2, -2.4);
+  put(oliveTree(M, 1.05, 3, true), 3.0, 14.0);
+  put(oliveTree(M, 0.85, 4, true), 9.3, 14.3);
   for (const [x, z, h, s] of [[0.9, -3.9, 7.5, 1], [2.3, -3.95, 6.6, 2], [12.0, -3.9, 7.8, 3], [Pp.x1 + 1.2, 8.5, 8.2, 4], [Pp.x1 + 1.2, 10.4, 7.2, 5], [Pp.x1 + 1.2, 12.3, 7.9, 6], [0.8, 15.0, 6.8, 7]]) {
     put(cypressTree(M, h, s), x, z);
   }
   // lavender & rosemary along the south facade
   for (let i = 0; i < 14; i++) {
     const x = 1.6 + i * 0.68;
-    put(shrub(M, 0.28, i % 2 ? 0x8b7fb8 : 0x6f8a5c, 300 + i), x, 12.7);
+    put(shrub(M, 0.28, 0x6f8a5c, 300 + i, i % 2 ? 0x8b72c4 : null), x, 12.7);
   }
   // bougainvillea climbing the pergola post
   const bg = new THREE.Group();
   const rnd = seeded(77);
-  for (let i = 0; i < 14; i++) {
-    const blob = foliageBlob(M, 0.22 + rnd() * 0.15, i % 3 ? 0xc0307a : 0x4f7a3c, rnd, 1);
-    blob.position.set((rnd() - 0.5) * 0.4, rnd() * 2.9, (rnd() - 0.5) * 0.5);
-    bg.add(blob);
-  }
-  for (let i = 0; i < 10; i++) {
-    const blob = foliageBlob(M, 0.2 + rnd() * 0.12, i % 3 ? 0xc0307a : 0x4f7a3c, rnd, 1);
-    blob.position.set(-0.4 - rnd() * 1.4, 3.0 + rnd() * 0.15, (rnd() - 0.5) * 0.6 + 0.2);
-    bg.add(blob);
-  }
+  const clump = (x, y, z, r) => {
+    bg.add(leafCanopy(M, { count: 90, radius: [r, r, r], center: [x, y, z], leaf: [0.05, 0.08], color: 0x4f7a3c, rnd }));
+    bg.add(leafCanopy(M, { count: 120, radius: [r * 1.05, r * 1.05, r * 1.05], center: [x, y, z], leaf: [0.05, 0.06], color: 0xc42d7e, rnd }));
+  };
+  for (let i = 0; i < 9; i++) clump((rnd() - 0.5) * 0.35, 0.3 + i * 0.32, (rnd() - 0.5) * 0.4, 0.2 + rnd() * 0.1);
+  for (let i = 0; i < 8; i++) clump(-0.3 - rnd() * 1.6, 3.05 + rnd() * 0.12, (rnd() - 0.5) * 0.7 + 0.25, 0.22 + rnd() * 0.1);
+  const vine = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.04, 3.0, 6), M.bark);
+  vine.position.set(0.05, 1.5, 0.05);
+  bg.add(vine);
   put(bg, SITE.pergola.x1 - 0.05, SITE.pergola.z0 + 0.15, LEVELS.courtyard);
   // planters along the north apron
-  for (const x of [0.6, 1.6]) put(shrub(M, 0.32, 0x5f7f4a, 900 + x * 10), x, -0.9);
+  for (const x of [0.6, 1.6]) put(shrub(M, 0.32, 0x5f7f4a, 900 + x * 10, 0xe9e2d0), x, -0.9);
   // potted plants on the courtyard
   site.add(potted(M, 'lemon', 6.25, 0.45));
   site.add(potted(M, 'olive', 9.35, 5.65));
@@ -410,7 +431,7 @@ function potted(M, kind, x, z) {
   pot.position.y = 0.275;
   g.add(pot);
   if (kind === 'olive') {
-    const t = oliveTree(M, 0.55, 9);
+    const t = oliveTree(M, 0.55, 9, true);
     t.position.y = 0.5;
     g.add(t);
   } else {

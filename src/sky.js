@@ -85,7 +85,7 @@ export class Environment {
     // warm band around the horizon: light bounced off stone houses and dry hills
     const band = new THREE.Mesh(
       new THREE.CylinderGeometry(35, 35, 14, 48, 1, true),
-      new THREE.MeshBasicMaterial({ color: 0xc8b494, side: THREE.BackSide, transparent: true, opacity: 0.85 }),
+      new THREE.MeshBasicMaterial({ color: 0xd2c8b6, side: THREE.BackSide, transparent: true, opacity: 0.85 }),
     );
     band.position.y = 3;
     this.envBand = band;
@@ -159,7 +159,7 @@ export class Environment {
     const fogNight = new THREE.Color(0x0d1424);
     this.scene.fog.color.copy(fogDay).lerp(fogNight, this.night);
     this.envGround.material.color.set(0xb8ad93).lerp(new THREE.Color(0x111318), this.night);
-    this.envBand.material.color.set(0xc8b494).lerp(new THREE.Color(0xe6a874), golden * 0.4).lerp(new THREE.Color(0x0c0f16), this.night);
+    this.envBand.material.color.set(0xd2c8b6).lerp(new THREE.Color(0xe6a874), golden * 0.4).lerp(new THREE.Color(0x0c0f16), this.night);
 
     this.scene.environmentIntensity = 0.16 + 0.29 * day01;
     // deep navy night sky once the twilight is gone
